@@ -34,6 +34,7 @@ const mockApiVerifyCode = vi.hoisted(() => vi.fn());
 const mockApiSetToken = vi.hoisted(() => vi.fn());
 const mockApiGetMe = vi.hoisted(() => vi.fn());
 const mockApiIssueCliToken = vi.hoisted(() => vi.fn());
+const mockApiStartOIDCLogin = vi.hoisted(() => vi.fn());
 const mockSetQueryData = vi.hoisted(() => vi.fn());
 // Mutable slice of auth state the component subscribes to.
 const mockAuthState = vi.hoisted(() => ({ expired: false }));
@@ -72,6 +73,7 @@ vi.mock("@multica/core/api", () => ({
     setToken: mockApiSetToken,
     getMe: mockApiGetMe,
     issueCliToken: mockApiIssueCliToken,
+    startOIDCLogin: mockApiStartOIDCLogin,
   },
 }));
 
@@ -408,6 +410,18 @@ describe("LoginPage", () => {
     expect(
       screen.queryByRole("button", { name: /continue with google/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders the configured generic OIDC provider", () => {
+    renderWithI18n(
+      <LoginPage
+        onSuccess={onSuccess}
+        oidc={{ providerName: "Company SSO" }}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /continue with company sso/i }),
+    ).toBeInTheDocument();
   });
 
   // -------------------------------------------------------------------------

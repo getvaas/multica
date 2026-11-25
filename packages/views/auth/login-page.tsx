@@ -34,6 +34,11 @@ interface GoogleAuthConfig {
   state?: string;
 }
 
+interface OIDCAuthConfig {
+  providerName: string;
+  appState?: string;
+}
+
 interface CliCallbackConfig {
   /** Validated localhost callback URL */
   url: string;
@@ -49,12 +54,16 @@ interface LoginPageProps {
   onSuccess: () => void;
   /** Google OAuth config. Omit to disable Google login. */
   google?: GoogleAuthConfig;
+  /** Generic OIDC provider exposed by the server runtime config. */
+  oidc?: OIDCAuthConfig;
   /** CLI callback config for authorizing CLI tools. */
   cliCallback?: CliCallbackConfig;
   /** Called after a token is obtained (e.g. to set cookies). */
   onTokenObtained?: () => void;
   /** Override Google login handler (e.g. desktop opens browser externally). When provided, renders the Google button even if `google` config is omitted. */
   onGoogleLogin?: () => void;
+  /** Override OIDC login handler when the authorization flow must run in an external browser. */
+  onOIDCLogin?: () => void;
   /** Slot rendered at the bottom of the sign-in card, below the
    *  Google button. The web shell uses it for a "Prefer the desktop
    *  app?" prompt; desktop omits it (a download prompt inside the app
@@ -97,9 +106,11 @@ export function LoginPage({
   logo,
   onSuccess,
   google,
+  oidc,
   cliCallback,
   onTokenObtained,
   onGoogleLogin,
+  onOIDCLogin,
   extra,
 }: LoginPageProps) {
   const { t } = useT("auth");
@@ -293,6 +304,26 @@ export function LoginPage({
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   };
 
+  const handleOIDCLogin = async () => {
+    if (onOIDCLogin) {
+      onOIDCLogin();
+      return;
+    }
+    if (!oidc) return;
+    setLoading(true);
+    setError("");
+    try {
+      const { authorization_url: authorizationURL } = await api.startOIDCLogin(
+        oidc.appState ?? "",
+      );
+      window.location.href = authorizationURL;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t(($) => $.errors.oidc_failed));
+      setLoading(false);
+    }
+  };
+
+  // -------------------------------------------------------------------------
   // CLI confirm step
 
   if (step === "cli_confirm" && existingUser) {
@@ -485,6 +516,20 @@ export function LoginPage({
                 />
               </svg>
               {t(($) => $.signin.google)}
+            </Button>
+          )}
+          {(oidc || onOIDCLogin) && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              size="lg"
+              onClick={handleOIDCLogin}
+              disabled={loading}
+            >
+              {t(($) => $.signin.oidc, {
+                provider: oidc?.providerName ?? "SSO",
+              })}
             </Button>
           )}
           {extra && <div className="w-full pt-1 text-center">{extra}</div>}

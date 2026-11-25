@@ -1053,6 +1053,7 @@ export interface AppConfigResponse {
   cdn_signed?: boolean;
   allow_signup: boolean;
   google_client_id?: string;
+  oidc_provider_name?: string;
   posthog_key?: string;
   posthog_host?: string;
   analytics_environment?: string;
@@ -1365,6 +1366,7 @@ export const AppConfigSchema = z.object({
   cdn_signed: BooleanWithDefaultSchema(false),
   allow_signup: BooleanWithDefaultSchema(true),
   google_client_id: OptionalStringSchema,
+  oidc_provider_name: OptionalStringSchema,
   posthog_key: OptionalStringSchema,
   posthog_host: OptionalStringSchema,
   analytics_environment: OptionalStringSchema,
@@ -1389,6 +1391,7 @@ export const EMPTY_APP_CONFIG: AppConfigResponse = {
   cdn_signed: false,
   allow_signup: true,
   google_client_id: "",
+  oidc_provider_name: "",
   daemon_server_url: "",
   daemon_app_url: "",
   daemon_setup_target: "unknown",
@@ -3342,6 +3345,19 @@ export const EMPTY_USER: User = {
   updated_at: "",
 };
 
+export const OIDCStartResponseSchema = z
+  .object({
+    authorization_url: z.string(),
+  })
+  .loose();
+
+export const OIDCLoginResponseSchema = z
+  .object({
+    token: z.string(),
+    user: UserSchema,
+    app_state: z.string().optional().default(""),
+  })
+  .loose();
 // Cross-workspace unread inbox summary (`/api/inbox/unread-summary` GET).
 // One entry per workspace the user belongs to that has unread items; the
 // sidebar derives the workspace-switcher dot from it. Lenient per the usual

@@ -164,7 +164,8 @@ var workspaceDeletionManifest = map[string]workspaceDeleteAction{
 	"task_usage_hourly_dirty":            workspaceDelete,
 	"task_usage_hourly_rollup_state":     workspaceDeleteKeep,
 	"user":                               workspaceDeleteKeep,
-	"user_composio_connection":           workspaceDelete, // personal accounts made in the workspace; older rows have no workspace and stay
+	"user_composio_connection":           workspaceDelete,     // personal accounts made in the workspace; older rows have no workspace and stay
+	"user_oidc_identity":                 workspaceDeleteKeep, // user-scoped login identity, no workspace_id
 	"vcs_commit_status":                  workspaceDelete,
 	"vcs_connection":                     workspaceDelete,
 	"vcs_pull_request":                   workspaceDelete,
